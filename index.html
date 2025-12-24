@@ -1,0 +1,554 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Виртуальные номера для Telegram</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Виртуальные номера для Telegram. Оформление заявки в Telegram.">
+
+  <style>
+    :root{
+      --bg:#050712;
+      --card:#0f1836;
+      --text:#e9ecf7;
+      --muted:#aeb6d6;
+      --border:rgba(255,255,255,.12);
+      --radius:22px;
+      --accent1:#6ee7ff;
+      --accent2:#a78bfa;
+      --shadow:0 20px 60px rgba(0,0,0,.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 500px at 20% 0%, rgba(110,231,255,.15), transparent 60%),
+        radial-gradient(900px 500px at 80% 10%, rgba(167,139,250,.18), transparent 60%),
+        linear-gradient(180deg, #04050f, var(--bg));
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    canvas#snow{position:fixed;inset:0;pointer-events:none;z-index:-1}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:12px;margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+    .brand{display:flex;align-items:center;gap:12px;min-width:220px}
+    .logo{
+      width:46px;height:46px;border-radius:18px;
+      background:linear-gradient(135deg,var(--accent1),var(--accent2));
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;box-shadow:0 15px 40px rgba(110,231,255,.25);
+      flex:0 0 auto;
+    }
+
+    .card{
+      background:rgba(15,24,54,.75);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+    }
+    h1{margin:0 0 10px;font-size:38px;line-height:1.05}
+    h2{margin:0 0 12px}
+    p{margin:0;color:var(--muted);line-height:1.6}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    @media(max-width:900px){.hero{grid-template-columns:1fr}}
+    .hero-left{padding:26px}
+    .hero-right{padding:20px}
+
+    .btn{
+      padding:12px 18px;border-radius:18px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);color:var(--text);
+      font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;
+      gap:8px;align-items:center;justify-content:center;
+      transition:transform .15s ease, filter .2s ease, box-shadow .2s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover{transform:translateY(-1px); filter:brightness(1.06)}
+    .btn:active{transform:translateY(0px) scale(.99)}
+
+    .btn.primary{
+      border:none;color:#050712;
+      background:linear-gradient(135deg,var(--accent1),var(--accent2));
+      box-shadow:0 12px 40px rgba(110,231,255,.18);
+    }
+
+    .btn.pulse{position:relative; overflow:hidden}
+    .btn.pulse::after{
+      content:"";
+      position:absolute;
+      inset:-20px;
+      background:radial-gradient(circle at 30% 30%, rgba(110,231,255,.18), transparent 55%);
+      animation:pulseGlow 2.2s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes pulseGlow{
+      0%{transform:scale(.95); opacity:.35}
+      50%{transform:scale(1.05); opacity:.75}
+      100%{transform:scale(.95); opacity:.35}
+    }
+
+    section{margin-top:18px}
+    .section-inner{padding:22px}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:700px){.row2{grid-template-columns:1fr}}
+
+    select{
+      width:100%;padding:12px;border-radius:16px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);color:var(--text);margin-top:10px;
+      appearance:none;
+    }
+
+    .disclaimer{
+      margin-top:16px;padding:14px;border-radius:18px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);font-size:13px;color:var(--muted);
+    }
+
+    .status{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-size:13px;
+    }
+    .ok{color:#bdfcc9}
+    .no{color:#ffd0d0}
+
+    .form-wrap{display:none;margin-top:16px}
+    .copybox{
+      border:1px solid var(--border);border-radius:18px;padding:14px;
+      background:rgba(255,255,255,.02);margin-top:12px;
+    }
+    pre{
+      white-space:pre-wrap;word-break:break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:13px;line-height:1.45;margin:10px 0 0;
+    }
+
+    .topButtons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    /* Модалки */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal{
+      width:min(720px, 100%);
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:rgba(15,24,54,.92);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+      padding:18px;
+    }
+    .modalHeader{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .modalHeader b{font-size:18px}
+    .closeBtn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:800;
+    }
+
+    footer{margin-top:20px;font-size:13px;color:var(--muted)}
+
+    /* ====== МОБИЛЬНАЯ АДАПТАЦИЯ (уже есть) ====== */
+    @media(max-width:520px){
+      .container{padding:16px}
+      h1{font-size:30px}
+      .hero-left{padding:18px}
+      .hero-right{padding:16px}
+      .section-inner{padding:16px}
+      .btn{width:100%}                /* кнопки в форме на всю ширину */
+      .topButtons{width:100%}
+      .topButtons .btn{width:auto}    /* верхние кнопки не растягиваем на 100% */
+      .copyActions{display:grid;gap:10px}
+      .copyActions .btn{width:100%}
+      pre{font-size:12.5px}
+      select{padding:13px}
+    }
+    @media(max-width:520px){
+      .topButtons{justify-content:flex-start}
+      .topButtons .btn{flex:1 1 auto}
+    }
+  </style>
+</head>
+
+<body>
+<canvas id="snow"></canvas>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="logo">🎄</div>
+      <div>
+        <b>Виртуальные номера</b><br>
+        <span style="font-size:12px;color:#9aa3d6">Для Telegram</span>
+      </div>
+    </div>
+
+    <div class="topButtons">
+      <a class="btn primary pulse" href="https://t.me/mrakavirtual" target="_blank" rel="noopener">Телеграм канал</a>
+      <button class="btn pulse" type="button" id="infoBtn">Информация</button>
+      <button class="btn pulse" type="button" id="topupBtn">Пополнения номеров</button>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="card hero-left">
+      <h1>Виртуальные номера для Telegram</h1>
+      <p>Выберите страну, количество, отлегу, назначение и способ оплаты — сформируется заявка.</p>
+
+      <div class="disclaimer">
+        <b>Дисклеймер:</b> сервис предоставляет виртуальные номера только для законного использования.
+        Мошенничество, фишинг, спам и любые незаконные действия запрещены.
+        Покупатель несёт ответственность за соблюдение правил Telegram и законодательства.
+      </div>
+    </div>
+
+    <div class="card hero-right">
+      <h2>Цены</h2>
+      <p>Россия (+7) — <b>300 ₽</b></p>
+      <p>Украина (+380) — <b>300 ₽</b></p>
+      <p>США (+1) — <b>100 ₽</b></p>
+      <p>Индия (+91) — <b>200 ₽</b></p>
+
+      <div class="disclaimer">
+        Номера <b>с отлегой</b> — цена <b>×2</b>
+      </div>
+
+      <div class="disclaimer">
+        <b>Наличие сейчас:</b><br>
+        Россия — нет в наличии<br>
+        Украина — нет в наличии<br>
+        США — в наличии<br>
+        Индия — в наличии
+      </div>
+    </div>
+  </main>
+
+  <section class="card">
+    <div class="section-inner">
+      <h2>Оформить заказ</h2>
+
+      <div class="row2">
+        <select id="country">
+          <option value="">Выберите страну</option>
+          <option value="Россия">Россия (+7)</option>
+          <option value="Украина">Украина (+380)</option>
+          <option value="США">США (+1)</option>
+          <option value="Индия">Индия (+91)</option>
+        </select>
+
+        <select id="qty">
+          <option value="1">1 номер</option>
+          <option value="2">2 номера</option>
+          <option value="5">5 номеров</option>
+          <option value="10">10 номеров</option>
+        </select>
+      </div>
+
+      <div class="row2">
+        <select id="delay">
+          <option value="Без отлеги">Без отлеги</option>
+          <option value="С отлегой">С отлегой (×2)</option>
+        </select>
+
+        <select id="purpose">
+          <option value="">Для чего нужен номер?</option>
+          <option value="Личный аккаунт">Личный аккаунт</option>
+          <option value="Бизнес">Бизнес</option>
+          <option value="Дополнительный аккаунт">Дополнительный аккаунт</option>
+        </select>
+      </div>
+
+      <select id="payMethod">
+        <option value="">Способ оплаты</option>
+        <option value="Сбербанк">Сбербанк</option>
+        <option value="NFT">NFT</option>
+        <option value="Подарки">Подарки</option>
+        <option value="Звезды Telegram">Звезды Telegram</option>
+      </select>
+
+      <div class="status" id="statusRow" style="display:none;">
+        <span class="chip" id="availChip"></span>
+        <span class="chip" id="priceChip"></span>
+        <span class="chip" id="payChip"></span>
+      </div>
+
+      <div id="formWrap" class="form-wrap">
+        <div class="copybox">
+          <b>Текст заявки</b>
+          <pre id="msg"></pre>
+
+          <div class="copyActions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn" type="button" id="copyBtn">Скопировать текст</button>
+            <button class="btn primary" type="button" id="sendBtn">Открыть @klshmraka</button>
+          </div>
+
+          <div class="disclaimer" style="margin-top:12px;">
+            Кнопка откроет профиль <b>@klshmraka</b>. Текст заявки останется здесь — скопируйте и отправьте в чат.
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        <b>Дисклеймер:</b> сервис предоставляет виртуальные номера только для законного использования.
+        Мошенничество, фишинг, спам и любые незаконные действия запрещены.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © <span id="year"></span> • GitHub Pages
+  </footer>
+</div>
+
+<!-- Модалка: Информация -->
+<div class="modalOverlay" id="infoModal">
+  <div class="modal">
+    <div class="modalHeader">
+      <b>Информация</b>
+      <button class="closeBtn" type="button" data-close="infoModal">Закрыть</button>
+    </div>
+    <p style="color:var(--muted)">
+      Номера предоставляются рабочие и проверенные, с быстрым получением SMS.
+      Мы не занимаемся скамом — все номера тестируются перед выдачей.
+      Формат использования может быть как одноразовый, так и временный (в зависимости от выбранного типа номера и сервиса).
+    </p>
+  </div>
+</div>
+
+<!-- Модалка: Пополнения -->
+<div class="modalOverlay" id="topupModal">
+  <div class="modal">
+    <div class="modalHeader">
+      <b>Пополнения номеров</b>
+      <button class="closeBtn" type="button" data-close="topupModal">Закрыть</button>
+    </div>
+    <p style="color:var(--muted)">
+      Для виртуальных номеров пополнение позволяет продлить срок аренды номера или активировать дополнительный прием SMS,
+      если такая возможность предусмотрена выбранным сервисом.
+    </p>
+  </div>
+</div>
+
+<script>
+  // ====== КУДА ОТКРЫВАТЬ ======
+  const SELLER_USERNAME = "klshmraka"; // без @
+  const SELLER_PROFILE_URL = "https://t.me/" + SELLER_USERNAME;
+
+  // ====== Наличие и цены ======
+  const PRODUCTS = {
+    "Россия":  { code: "+7",   price: 300, inStock: false },
+    "Украина": { code: "+380", price: 300, inStock: false },
+    "США":     { code: "+1",   price: 100, inStock: true  },
+    "Индия":   { code: "+91",  price: 200, inStock: true  },
+  };
+
+  // ====== Модалки ======
+  const infoBtn = document.getElementById('infoBtn');
+  const topupBtn = document.getElementById('topupBtn');
+  const infoModal = document.getElementById('infoModal');
+  const topupModal = document.getElementById('topupModal');
+
+  function openModal(el){ el.style.display = "flex"; }
+  function closeModal(el){ el.style.display = "none"; }
+
+  infoBtn.addEventListener('click', ()=>openModal(infoModal));
+  topupBtn.addEventListener('click', ()=>openModal(topupModal));
+
+  document.querySelectorAll('[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-close');
+      closeModal(document.getElementById(id));
+    });
+  });
+
+  [infoModal, topupModal].forEach(ov=>{
+    ov.addEventListener('click', (e)=>{
+      if(e.target === ov) closeModal(ov);
+    });
+  });
+
+  // ====== Форма заказа ======
+  const country = document.getElementById('country');
+  const qty = document.getElementById('qty');
+  const delay = document.getElementById('delay');
+  const purpose = document.getElementById('purpose');
+  const payMethod = document.getElementById('payMethod');
+
+  const formWrap = document.getElementById('formWrap');
+  const msg = document.getElementById('msg');
+
+  const statusRow = document.getElementById('statusRow');
+  const availChip = document.getElementById('availChip');
+  const priceChip = document.getElementById('priceChip');
+  const payChip = document.getElementById('payChip');
+
+  const copyBtn = document.getElementById('copyBtn');
+  const sendBtn = document.getElementById('sendBtn');
+
+  function multiplier(){ return (delay.value === "С отлегой") ? 2 : 1; }
+
+  function compute(){
+    const c = country.value;
+    const q = Number(qty.value || 1);
+    const base = PRODUCTS[c]?.price ?? 0;
+    const mult = multiplier();
+    const total = base * q * mult;
+    return { base, mult, total };
+  }
+
+  function buildText(){
+    const c = country.value || "-";
+    const q = Number(qty.value || 1);
+    const d = delay.value || "Без отлеги";
+    const p = purpose.value || "-";
+    const pay = payMethod.value || "-";
+
+    const st = PRODUCTS[c];
+    const code = st?.code || "";
+    const availability = st?.inStock ? "в наличии" : "нет в наличии";
+    const { base, mult, total } = compute();
+
+    return `Здравствуйте! Хочу купить виртуальный номер для Telegram.
+
+Страна: ${c} ${code}
+Количество: ${q}
+Отлега: ${d}
+Назначение: ${p}
+Способ оплаты: ${pay}
+Наличие: ${availability}
+
+Расчет:
+• Цена за 1 номер: ${base} ₽
+• Множитель (отлега): ×${mult}
+• Итого: ${total} ₽
+
+Прошу подтвердить наличие, итоговую цену и условия. Спасибо!`;
+  }
+
+  function update(){
+    const c = country.value;
+
+    if(!c){
+      statusRow.style.display = "none";
+    } else {
+      statusRow.style.display = "flex";
+      const st = PRODUCTS[c];
+
+      if(st?.inStock){
+        availChip.innerHTML = `Наличие: <span class="ok"><b>в наличии</b></span>`;
+      } else {
+        availChip.innerHTML = `Наличие: <span class="no"><b>нет в наличии</b></span>`;
+      }
+
+      const { base, mult, total } = compute();
+      priceChip.innerHTML = `Цена: <b>${base} ₽</b> • отлега ×${mult} • итого: <b>${total} ₽</b>`;
+
+      const pay = payMethod.value || "не выбран";
+      payChip.innerHTML = `Оплата: <b>${pay}</b>`;
+    }
+
+    if(country.value && purpose.value && payMethod.value){
+      formWrap.style.display = "block";
+      msg.textContent = buildText();
+    } else {
+      formWrap.style.display = "none";
+      msg.textContent = "";
+    }
+
+    // если нет в наличии — блокируем кнопку открытия (чтобы не писали зря)
+    if(c && PRODUCTS[c] && PRODUCTS[c].inStock === false){
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = .6;
+      sendBtn.style.cursor = "not-allowed";
+      sendBtn.title = "Сейчас нет в наличии";
+    } else {
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = 1;
+      sendBtn.style.cursor = "pointer";
+      sendBtn.title = "";
+    }
+  }
+
+  [country, qty, delay, purpose, payMethod].forEach(el=>{
+    el.addEventListener('change', update);
+  });
+
+  copyBtn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(msg.textContent).then(()=>{
+      alert("Текст скопирован!");
+    }).catch(()=>{
+      alert("Не удалось скопировать автоматически. Скопируйте вручную.");
+    });
+  });
+
+  // Открываем ТОЛЬКО профиль @klshmraka
+  sendBtn.addEventListener('click', ()=>{
+    window.open(SELLER_PROFILE_URL, "_blank");
+  });
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+  update();
+
+  // ====== СНЕГ ======
+  const snowCanvas = document.getElementById('snow');
+  const ctx = snowCanvas.getContext('2d');
+  let w, h, flakes = [];
+  function resize(){
+    w = snowCanvas.width = innerWidth;
+    h = snowCanvas.height = innerHeight;
+    const count = Math.min(190, Math.floor(w / 7));
+    flakes = Array.from({length: count}, ()=>({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: 1 + Math.random()*2.4,
+      vy: 0.6 + Math.random()*1.8,
+      vx: -0.4 + Math.random()*0.8,
+      a: 0.22 + Math.random()*0.55
+    }));
+  }
+  addEventListener('resize', resize);
+  resize();
+  (function tick(){
+    ctx.clearRect(0,0,w,h);
+    for(const f of flakes){
+      f.x += f.vx; f.y += f.vy;
+      if(f.y > h + 10){ f.y = -10; f.x = Math.random()*w; }
+      if(f.x > w + 10) f.x = -10;
+      if(f.x < -10) f.x = w + 10;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${f.a})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  })();
+</script>
+</body>
+</html>
